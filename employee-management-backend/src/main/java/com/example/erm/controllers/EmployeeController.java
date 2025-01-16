@@ -7,6 +7,8 @@ import com.example.erm.dto.EmployeeSearchCriteria;
 import com.example.erm.entities.Employee;
 import com.example.erm.entities.EmployeeStatus;
 import com.example.erm.entities.User;
+import com.example.erm.exceptions.ResourceNotFoundException;
+import com.example.erm.repositories.UserRepository;
 import com.example.erm.services.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,22 +23,23 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
     private final EmployeeMapper employeeMapper;
-
+    private final UserRepository userRepository;
     @Autowired
-    public EmployeeController(EmployeeService employeeService, EmployeeMapper employeeMapper) {
+    public EmployeeController(EmployeeService employeeService, EmployeeMapper employeeMapper, UserRepository userRepository) {
         this.employeeService = employeeService;
         this.employeeMapper = employeeMapper;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -44,7 +47,9 @@ public class EmployeeController {
     @Operation(summary = "Create employee", description = "Create a new employee")
     public ResponseEntity<Employee> createEmployee(
             @RequestBody @Valid EmployeeDTO employeeDTO,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Employee employee = employeeService.createEmployee(
                 employeeMapper.toEntity(employeeDTO),
                 currentUser
@@ -80,7 +85,9 @@ public class EmployeeController {
     })
     public ResponseEntity<EmployeeResponseDTO> getEmployee(
             @PathVariable("id") Long employeeId,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Employee employee = employeeService.getEmployee(employeeId, currentUser);
         return ResponseEntity.ok(employeeMapper.toResponseDTO(employee));
     }
@@ -138,7 +145,9 @@ public class EmployeeController {
     })
     public ResponseEntity<Void> deleteEmployee(
             @PathVariable("id") @Parameter(description = "Employee ID", required = true) Long employeeId,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         employeeService.deleteEmployee(employeeId, currentUser);
         return ResponseEntity.noContent().build();
     }
