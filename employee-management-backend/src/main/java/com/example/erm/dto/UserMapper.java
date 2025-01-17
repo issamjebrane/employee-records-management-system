@@ -10,12 +10,19 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
     private final PasswordEncoder passwordEncoder;
 
-    public User toEntity(UserCreateDTO dto) {
+    public <T> User toEntity(T dto) {
         User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setPasswordHash(dto.getPassword()); // Will be encoded in service
-        user.setEmail(dto.getEmail());
-        user.setRole(dto.getRole());
+        if(dto instanceof UserCreateDTO createDTO) {
+            user.setUsername(createDTO.getUsername());
+            user.setPasswordHash(passwordEncoder.encode(createDTO.getPassword()));
+            user.setEmail(createDTO.getEmail());
+            user.setRole(createDTO.getRole());
+        } else if(dto instanceof UserDTO userDTO) {
+            user.setUsername(userDTO.getUsername());
+            user.setPasswordHash(userDTO.getPassword());
+            user.setEmail(userDTO.getEmail());
+            user.setRole(userDTO.getRole());
+        }
         return user;
     }
 

@@ -8,10 +8,13 @@ import com.example.erm.exceptions.ValidationException;
 import com.example.erm.repositories.DepartmentRepository;
 import com.example.erm.repositories.EmployeeRepository;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -143,5 +146,22 @@ public class EmployeeMapper {
         }
 
         return responseDTO;
+    }
+
+    public List<DepartmentDTO> toDepartmentDTOList(List<Department> departments) {
+        return departments.stream()
+                .map(this::toDepartmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    public DepartmentDTO toDepartmentDTO(Department department) {
+        if (department == null) {
+            return null;
+        }
+
+        DepartmentDTO dto = new DepartmentDTO();
+        dto.setDeptId(department.getDeptId());
+        dto.setDeptName(department.getDeptName());
+        return dto;
     }
 }

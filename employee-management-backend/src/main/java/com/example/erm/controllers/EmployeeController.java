@@ -131,6 +131,29 @@ public class EmployeeController {
         return ResponseEntity.ok(employees.map(employeeMapper::toResponseDTO));
     }
 
+    // update employee
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @Operation(
+            summary = "Update employee",
+            description = "Update an existing employee"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Employee successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Employee not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions"),
+            @ApiResponse(responseCode = "400", description = "Invalid employee ID supplied")
+    })
+    public ResponseEntity<Employee> updateEmployee(
+            @PathVariable("id") @Parameter(description = "Employee ID", required = true) Long employeeId,
+            @RequestBody @Valid EmployeeDTO employeeDTO,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Employee updatedEmployee = employeeService.updateEmployee(employeeId, employeeMapper.toEntity(employeeDTO), currentUser);
+        return ResponseEntity.ok(updatedEmployee);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @Operation(
@@ -150,5 +173,23 @@ public class EmployeeController {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         employeeService.deleteEmployee(employeeId, currentUser);
         return ResponseEntity.noContent().build();
+    }
+
+    // get all employees
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
+    @Operation(
+            summary = "Get all employees",
+            description = "Retrieve all employees with pagination"
+    )
+    public ResponseEntity<Page<EmployeeResponseDTO>> getAllEmployees(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "empId") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        Page<Employee> employees = employeeService.getAllEmployees(page, size, sortBy, sortDirection, currentUser);
+        return ResponseEntity.ok(employees.map(employeeMapper::toResponseDTO));
     }
 }

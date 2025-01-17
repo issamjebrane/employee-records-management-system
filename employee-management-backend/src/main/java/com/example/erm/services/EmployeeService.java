@@ -32,12 +32,12 @@ public class EmployeeService {
         this.departmentRepository = departmentRepository;
         this.auditService = auditService;
     }
-
+    @Transactional
     public Employee createEmployee(Employee employee, User currentUser) {
-        validateEmployeeData(employee);
+        validateEmployeeData(employee, "CREATE");
         validateUserPermissions(currentUser, employee.getDepartment().getDeptId());
 
-        employee.setStatus(EmployeeStatus.ACTIVE);
+        employee.setStatus(employee.getStatus() != null ? employee.getStatus() : EmployeeStatus.ACTIVE);
         employee.setCreatedBy(currentUser);
 
         Employee savedEmployee = employeeRepository.save(employee);
@@ -53,13 +53,13 @@ public class EmployeeService {
 
         return savedEmployee;
     }
-
+    @Transactional
     public Employee updateEmployee(Long empId, Employee updatedEmployee, User currentUser) {
         Employee existingEmployee = employeeRepository.findById(empId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + empId));
 
         validateUserPermissions(currentUser, existingEmployee.getDepartment().getDeptId());
-        validateEmployeeData(updatedEmployee);
+        validateEmployeeData(updatedEmployee, "UPDATE");
 
         // Store old state for audit
         Employee oldState = copyEmployeeState(existingEmployee);
@@ -81,7 +81,7 @@ public class EmployeeService {
 
         return savedEmployee;
     }
-
+    @Transactional
     public void deleteEmployee(Long empId, User currentUser) {
         Employee employee = employeeRepository.findById(empId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + empId));
@@ -112,6 +112,7 @@ public class EmployeeService {
         return employee;
     }
 
+    @Transactional
     public Page<Employee> searchEmployees(EmployeeSearchCriteria criteria, User currentUser) {
         // Validate department access if specified
         if (criteria.getDepartmentId() != null) {
@@ -134,7 +135,8 @@ public class EmployeeService {
         );
     }
 
-    private Pageable createPageable(EmployeeSearchCriteria criteria) {
+    @Transactional
+    protected Pageable createPageable(EmployeeSearchCriteria criteria) {
         int page = criteria.getPage() != null ? criteria.getPage() : 0;
         int size = criteria.getSize() != null ? criteria.getSize() : 10;
 
@@ -146,7 +148,8 @@ public class EmployeeService {
         return PageRequest.of(page, size, sort);
     }
 
-    private void validateUserPermissions(User user, Long departmentId) {
+    @Transactional
+    protected void validateUserPermissions(User user, Long departmentId) {
         if (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.HR) {
             return; // Admin and HR have full access
         }
@@ -158,10 +161,10 @@ public class EmployeeService {
             }
         }
     }
-
-    private void validateEmployeeData(Employee employee) {
+    @Transactional
+    protected void validateEmployeeData(Employee employee, String action) {
         if (employee.getEmail() != null &&
-                employeeRepository.existsByEmail(employee.getEmail())) {
+                employeeRepository.existsByEmail(employee.getEmail()) && action.equals("CREATE")) {
             throw new IllegalArgumentException("Email already exists");
         }
 
@@ -175,8 +178,8 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
         }
     }
-
-    private void updateEmployeeFields(Employee existing, Employee updated) {
+    @Transactional
+    protected void updateEmployeeFields(Employee existing, Employee updated) {
         existing.setFirstName(updated.getFirstName());
         existing.setLastName(updated.getLastName());
         existing.setEmail(updated.getEmail());
@@ -186,8 +189,8 @@ public class EmployeeService {
         existing.setManager(updated.getManager());
         existing.setStatus(updated.getStatus());
     }
-
-    private Employee copyEmployeeState(Employee employee) {
+    @Transactional
+    protected Employee copyEmployeeState(Employee employee) {
         Employee copy = new Employee();
         copy.setEmpId(employee.getEmpId());
         copy.setFirstName(employee.getFirstName());
@@ -200,13 +203,18 @@ public class EmployeeService {
         copy.setStatus(employee.getStatus());
         return copy;
     }
-
-    private List<Employee> getUserAccessibleEmployees(User user) {
+    @Transactional
+    protected List<Employee> getUserAccessibleEmployees(User user) {
         if (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.HR) {
             return employeeRepository.findAll();
         } else if (user.getRole() == UserRole.MANAGER) {
             return employeeRepository.findByDepartmentDeptId(user.getDepartment().getDeptId());
         }
         return List.of(); // Empty list for other roles
+    }
+    @Transactional
+    public Page<Employee> getAllEmployees(Integer page, Integer size, String sortBy, String sortDirection, User currentUser) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+        return employeeRepository.findAll(pageable);
     }
 }

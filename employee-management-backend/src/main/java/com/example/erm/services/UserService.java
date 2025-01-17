@@ -28,7 +28,6 @@ public class UserService {
         }
 
         // Encode password
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -122,5 +121,15 @@ public class UserService {
         copy.setCreatedAt(user.getCreatedAt());
         copy.setLastLogin(user.getLastLogin());
         return copy;
+    }
+
+    //login user
+    public User loginUser(User user) {
+        return userRepository.findByUsername(user.getUsername())
+                .filter(u -> {
+                    System.out.println(passwordEncoder.matches(user.getPasswordHash(), u.getPasswordHash()));
+                    return passwordEncoder.matches(user.getPasswordHash(), u.getPasswordHash());
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid username or password"));
     }
 }

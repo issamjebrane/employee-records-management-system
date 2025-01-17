@@ -1,6 +1,7 @@
 package com.example.erm.dto;
 
 import com.example.erm.entities.EmployeeStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class EmployeeDTO {
@@ -35,4 +37,8 @@ public class EmployeeDTO {
     private Long managerId;
     private BigDecimal salary;
     private EmployeeStatus status;
+    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private String updatedBy;
 }

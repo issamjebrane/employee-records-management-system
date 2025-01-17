@@ -1,9 +1,6 @@
 package com.example.erm.controllers;
 
-import com.example.erm.dto.UserCreateDTO;
-import com.example.erm.dto.UserMapper;
-import com.example.erm.dto.UserResponseDTO;
-import com.example.erm.dto.UserUpdateDTO;
+import com.example.erm.dto.*;
 import com.example.erm.entities.User;
 import com.example.erm.exceptions.ResourceNotFoundException;
 import com.example.erm.repositories.UserRepository;
@@ -19,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -79,5 +78,26 @@ public class UserController {
 
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    //login user
+    @PostMapping("/login")
+    @Operation(summary = "Login user", description = "Login a user")
+    public ResponseEntity<UserResponseDTO> loginUser(@RequestBody @Valid UserDTO userDTO) {
+        User user = userMapper.toEntity(userDTO);
+        User loginUser = userService.loginUser(user);
+        return ResponseEntity.ok(userMapper.toResponseDTO(loginUser));
+    }
+
+    //get all users
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all users", description = "Get all users")
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers(@AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users.stream().map(userMapper::toResponseDTO).collect(Collectors.toList()));
     }
 }

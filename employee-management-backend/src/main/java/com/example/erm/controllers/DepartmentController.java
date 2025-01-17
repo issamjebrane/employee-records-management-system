@@ -1,5 +1,7 @@
 package com.example.erm.controllers;
 
+import com.example.erm.dto.DepartmentDTO;
+import com.example.erm.dto.EmployeeMapper;
 import com.example.erm.entities.Department;
 import com.example.erm.entities.User;
 import com.example.erm.exceptions.ResourceNotFoundException;
@@ -7,7 +9,6 @@ import com.example.erm.repositories.UserRepository;
 import com.example.erm.services.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +26,12 @@ import java.util.List;
 public class DepartmentController {
     private final DepartmentService departmentService;
     private final UserRepository userRepository;
+    private final EmployeeMapper employeeMapper;
     @Autowired
-    public DepartmentController(DepartmentService departmentService, UserRepository userRepository) {
+    public DepartmentController(DepartmentService departmentService, UserRepository userRepository, EmployeeMapper employeeMapper) {
         this.departmentService = departmentService;
         this.userRepository = userRepository;
+        this.employeeMapper = employeeMapper;
     }
 
     @PostMapping
@@ -85,10 +88,11 @@ public class DepartmentController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
     @Operation(summary = "Get all departments", description = "Retrieve all departments (filtered by user role)")
-    public ResponseEntity<List<Department>> getAllDepartments(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<DepartmentDTO>> getAllDepartments(@AuthenticationPrincipal UserDetails userDetails) {
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         List<Department> departments = departmentService.getAllDepartments(currentUser);
-        return ResponseEntity.ok(departments);
+        List<DepartmentDTO> departmentDTOS = employeeMapper.toDepartmentDTOList(departments);
+        return ResponseEntity.ok(departmentDTOS);
     }
 }

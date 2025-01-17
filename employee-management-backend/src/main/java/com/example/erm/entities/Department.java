@@ -1,5 +1,6 @@
 package com.example.erm.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class Department {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "department")
+    @JsonIgnore
     private List<Employee> employees = new ArrayList<>();
 
     @OneToMany(mappedBy = "department")

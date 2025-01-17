@@ -1,8 +1,4 @@
 package com.example.erm.config;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +24,7 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/v3/api-docs.yaml"
+                        .requestMatchers("/v3/api-docs/**","/api/v1/users/login", "/swagger-ui/**", "/swagger-ui.html","/v3/api-docs.yaml"
                                 ).permitAll()
                         .anyRequest().authenticated()
                 )
