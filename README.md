@@ -49,7 +49,7 @@ cd employee-management-backend
 
 3. Configure database in `application.properties`:
 ```properties
-spring.datasource.url=jdbc:oracle:thin:@localhost:1521:orcl
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521/XEPDB1
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
