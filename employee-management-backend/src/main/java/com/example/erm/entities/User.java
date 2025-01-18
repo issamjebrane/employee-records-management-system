@@ -3,7 +3,10 @@ package com.example.erm.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -41,6 +44,7 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "dept_id")
     private Department department;
+
 
     @PrePersist
     protected void onCreate() {
