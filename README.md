@@ -128,14 +128,6 @@ mvn test
 Admin:
 - Username: admin
 - Password: admin123
-
-HR:
-- Username: hr
-- Password: hr123
-
-Manager:
-- Username: manager
-- Password: manager123
 ```
 
 ## Building for Production
