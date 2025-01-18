@@ -1,6 +1,10 @@
 package com.employeemanagement.ui;
 
 import javax.swing.*;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import net.miginfocom.swing.MigLayout;
 import java.awt.*;
 import java.awt.event.*;
@@ -10,6 +14,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.URI;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
 public class LoginScreen extends JFrame {
@@ -18,7 +24,7 @@ public class LoginScreen extends JFrame {
     private JButton loginButton;
     private JLabel statusLabel;
 
-    private static final String API_URL = "http://localhost:8080/api/auth/login"; // Adjust to your backend URL
+    private static final String API_URL = "http://localhost:8080/api/v1/users/login";
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -89,11 +95,16 @@ public class LoginScreen extends JFrame {
     }
 
     private void handleLogin() {
+        System.out.println("Login attempt started");
+
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
+        System.out.println("Username entered: " + username);
+        // Don't log passwords in production!
 
         if (username.isEmpty() || password.isEmpty()) {
             showError("Please enter both username and password");
+            System.out.println("Login failed: Empty credentials");
             return;
         }
 
@@ -101,34 +112,39 @@ public class LoginScreen extends JFrame {
         statusLabel.setText("Logging in...");
         statusLabel.setForeground(Color.BLACK);
 
-        // Create login request body
-        LoginRequest loginRequest = new LoginRequest(username, password);
-
         try {
+            // Create login request body
+            LoginRequest loginRequest = new LoginRequest(username, password);
             String jsonRequest = objectMapper.writeValueAsString(loginRequest);
+            System.out.println("Request JSON created: " + jsonRequest);
+
+            System.out.println("Attempting to connect to: " + API_URL);
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
                     .build();
 
-            // Make async HTTP request
-            CompletableFuture<HttpResponse<String>> future = httpClient.sendAsync(
-                    request, HttpResponse.BodyHandlers.ofString());
-
-            future.thenAccept(response -> {
-                SwingUtilities.invokeLater(() -> {
-                    handleLoginResponse(response);
-                });
-            }).exceptionally(ex -> {
-                SwingUtilities.invokeLater(() -> {
-                    handleLoginError(ex);
-                });
-                return null;
-            });
+            // Make HTTP request
+            try {
+                System.out.println("Sending HTTP request...");
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println("Response received. Status: " + response.statusCode());
+                System.out.println("Response body: " + response.body());
+                handleLoginResponse(response);
+            } catch (Exception e) {
+                System.err.println("HTTP request failed: " + e.getMessage());
+                e.printStackTrace();
+                handleLoginError(e);
+            }
 
         } catch (Exception ex) {
+            System.err.println("Error preparing request: " + ex.getMessage());
+            ex.printStackTrace();
             handleLoginError(ex);
+        } finally {
+            loginButton.setEnabled(true);
         }
     }
 
@@ -137,16 +153,15 @@ public class LoginScreen extends JFrame {
 
         try {
             if (response.statusCode() == 200) {
-                LoginResponse loginResponse = objectMapper.readValue(
-                        response.body(), LoginResponse.class);
+                User user = objectMapper.readValue(response.body(), User.class);
+                user.setPassword(new String(passwordField.getPassword()));
+                proceedToMainApplication(user);
 
-                // TODO: Store the JWT token from loginResponse
-                proceedToMainApplication(loginResponse.getUser());
 
             } else {
                 String errorMsg = response.statusCode() == 401 ?
                         "Invalid credentials" :
-                        "Login failed: " + response.body();
+                        "Login failed: "  + response.body();
                 showError(errorMsg);
             }
         } catch (Exception ex) {
@@ -167,39 +182,49 @@ public class LoginScreen extends JFrame {
     private void proceedToMainApplication(User user) {
         dispose(); // Close login window
 
-        // Show main application window based on user role
         SwingUtilities.invokeLater(() -> {
-            // TODO: Initialize main application window with user role
-            JOptionPane.showMessageDialog(null,
-                    "Login successful! User role: " + user.getRole());
+            try {
+                MainWindow mainWindow = new MainWindow(user);
+                mainWindow.setVisible(true);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null,
+                        "Error opening main window: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                // If error occurs, show login screen again
+                new LoginScreen().setVisible(true);
+            }
         });
     }
 }
-
-// Data transfer objects
-class LoginRequest {
+@Setter
+@Getter
+@Data
+class User {
+    // Getters and setters
+    private Long userId;
     private String username;
+    private String email;
+    private UserRole role;
+    private Department department;
+    private String createdAt;
+    private String lastLogin;
     private String password;
-
-    public LoginRequest(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
-
-    // Getters required for JSON serialization
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
 }
 
-class LoginResponse {
-    private String token;
-    private User user;
+enum UserRole {
+    ADMIN,
+    HR,
+    MANAGER,
+    EMPLOYEE
+}
+@Setter
+@Getter
+@Data
+class Department {
+    private Long deptId;
+    private String deptName;
+    private LocalDateTime createdAt;
 
-    // Getters and setters required for JSON deserialization
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
 }
 
-// Main method for testing

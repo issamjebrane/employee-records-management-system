@@ -48,6 +48,10 @@ public class AuditService {
         return auditRepository.findByTableNameAndRecordId(tableName, recordId);
     }
 
+    // get all audit logs
+    public List<AuditTrail> getAllAuditTrail() {
+        return auditRepository.findAll();
+    }
     public List<AuditTrail> getUserActions(Long userId) {
         return auditRepository.findByChangedBy_UserId(userId);
     }

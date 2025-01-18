@@ -18,20 +18,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 
-public class EmployeesPanel extends JPanel {
-    private JTable employeesTable;
+public class UserPanel extends JPanel {
+    private JTable usersTable;
     private DefaultTableModel tableModel;
-    private JButton addEmployeeButton;
+    private JButton addUserButton;
     private JButton refreshButton;
-    private JButton deleteEmployeeButton;
+    private JButton deleteUserButton;
     private final User currentUser;
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    private static final String API_BASE_URL = "http://localhost:8080/api/v1/employees";
+    private static final String API_BASE_URL = "http://localhost:8080/api/v1/users";
 
-    public EmployeesPanel(User user) {
+    public UserPanel(User user) {
         this.currentUser = user;
         httpClient = HttpClient.newHttpClient();
         objectMapper = new ObjectMapper();
@@ -40,25 +40,25 @@ public class EmployeesPanel extends JPanel {
 
         initializeComponents();
         setupTable();
-        loadEmployees();
+        loadUsers();
     }
 
     private void initializeComponents() {
         // Create buttons panel
         JPanel buttonsPanel = new JPanel(new MigLayout("", "[][][][grow]"));
 
-        addEmployeeButton = new JButton("Add Employee");
+        addUserButton = new JButton("Add User");
         refreshButton = new JButton("Refresh");
-        deleteEmployeeButton = new JButton("Delete Employee");
+        deleteUserButton = new JButton("Delete User");
 
-        buttonsPanel.add(addEmployeeButton, "");
+        buttonsPanel.add(addUserButton, "");
         buttonsPanel.add(refreshButton, "");
-        buttonsPanel.add(deleteEmployeeButton, "wrap");
+        buttonsPanel.add(deleteUserButton, "wrap");
 
         // Setup button listeners
-        refreshButton.addActionListener(e -> loadEmployees());
-        addEmployeeButton.addActionListener(e -> showAddEmployeeDialog());
-        deleteEmployeeButton.addActionListener(e -> deleteSelectedEmployee());
+        refreshButton.addActionListener(e -> loadUsers());
+        addUserButton.addActionListener(e -> showAddUserDialog());
+        deleteUserButton.addActionListener(e -> deleteSelectedUser());
 
         add(buttonsPanel, "growx, wrap");
     }
@@ -66,8 +66,8 @@ public class EmployeesPanel extends JPanel {
     private void setupTable() {
         // Define column names
         String[] columnNames = {
-                "ID", "Name", "Email", "Job Title",
-                "Department", "Hire Date", "Status"
+                "ID", "Username", "Email", "Role",
+                "Department", "Created At", "Last Login"
         };
 
         // Create table model
@@ -79,29 +79,29 @@ public class EmployeesPanel extends JPanel {
         };
 
         // Create table with the model
-        employeesTable = new JTable(tableModel);
-        employeesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        employeesTable.addMouseListener(new MouseAdapter() {
+        usersTable = new JTable(tableModel);
+        usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        usersTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    showEmployeeDetailsDialog();
+                    showUserDetailsDialog();
                 }
             }
         });
+
         // Add table to scroll pane
-        JScrollPane scrollPane = new JScrollPane(employeesTable);
+        JScrollPane scrollPane = new JScrollPane(usersTable);
         add(scrollPane, "grow");
     }
 
-    private void loadEmployees() {
+    private void loadUsers() {
         // Get base64-encoded credentials
         String credentials = currentUser.getUsername() + ":" + currentUser.getPassword();
-
-
         String encodedCredentials = Base64.getEncoder().encodeToString(
                 credentials.getBytes(StandardCharsets.UTF_8)
         );
+
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_BASE_URL))
@@ -117,26 +117,26 @@ public class EmployeesPanel extends JPanel {
                 tableModel.setRowCount(0);
 
                 // Parse JSON response
-                EmployeePageResponse employeeResponse = objectMapper.readValue(
+                List<User> users = objectMapper.readValue(
                         response.body(),
-                        EmployeePageResponse.class
+                        new TypeReference<List<User>>(){}
                 );
 
-                for (Employee employee : employeeResponse.getEmployees()) {
+                for (User user : users) {
                     tableModel.addRow(new Object[]{
-                            employee.getEmpId(),
-                            employee.getFirstName() + " " + employee.getLastName(),
-                            employee.getEmail(),
-                            employee.getJobTitle(),
-                            employee.getDepartmentName(),
-                            employee.getHireDate(),
-                            employee.getStatus()
+                            user.getUserId(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getRole(),
+                            user.getDepartment() != null ? user.getDepartment().getDeptName() : "N/A",
+                            user.getCreatedAt(),
+                            user.getLastLogin()
                     });
                 }
             } else {
                 JOptionPane.showMessageDialog(
                         this,
-                        "Failed to load employees: " + response.body(),
+                        "Failed to load users: " + response.body(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                 );
@@ -145,61 +145,58 @@ public class EmployeesPanel extends JPanel {
             e.printStackTrace();
             JOptionPane.showMessageDialog(
                     this,
-                    "Error loading employees: " + e.getMessage(),
+                    "Error loading users: " + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
             );
         }
     }
-    private void updateStatusWithPaginationInfo(EmployeePageResponse response) {
-        String statusText = String.format(
-                "Showing %d of %d employees (Page %d of %d)",
-                response.getNumberOfElements(),
-                response.getTotalElements(),
-                response.getNumber() + 1,
-                response.getTotalPages()
-        );
 
-
-    }
-    private void showAddEmployeeDialog() {
-        AddEmployeeDialog dialog = new AddEmployeeDialog(
+    private void showAddUserDialog() {
+        UserDialog dialog = new UserDialog(
                 (Frame) SwingUtilities.getWindowAncestor(this),
                 currentUser
         );
         dialog.setVisible(true);
 
         if (dialog.isSuccessful()) {
-            loadEmployees(); // Refresh the list
+            loadUsers(); // Refresh the list
         }
     }
 
-    private void deleteSelectedEmployee() {
-        int selectedRow = employeesTable.getSelectedRow();
+    private void deleteSelectedUser() {
+        int selectedRow = usersTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Please select an employee to delete.",
+                    "Please select a user to delete.",
                     "No Selection",
                     JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
-        // Get the employee ID from the selected row
-        Long employeeId = (Long) tableModel.getValueAt(selectedRow, 0);
+        // Get the user ID from the selected row
+        Long userId = (Long) tableModel.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Are you sure you want to delete this employee?",
+                "Are you sure you want to delete this user?",
                 "Confirm Deletion",
                 JOptionPane.YES_NO_OPTION
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
+                // Get base64-encoded credentials
+                String credentials = currentUser.getUsername() + ":" + currentUser.getPassword();
+                String encodedCredentials = Base64.getEncoder().encodeToString(
+                        credentials.getBytes(StandardCharsets.UTF_8)
+                );
+
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(API_BASE_URL + "/" + employeeId))
+                        .uri(URI.create(API_BASE_URL + "/" + userId))
+                        .header("Authorization", "Basic " + encodedCredentials)
                         .DELETE()
                         .build();
 
@@ -211,15 +208,15 @@ public class EmployeesPanel extends JPanel {
                 if (response.statusCode() == 200) {
                     JOptionPane.showMessageDialog(
                             this,
-                            "Employee deleted successfully.",
+                            "User deleted successfully.",
                             "Success",
                             JOptionPane.INFORMATION_MESSAGE
                     );
-                    loadEmployees(); // Refresh the list
+                    loadUsers(); // Refresh the list
                 } else {
                     JOptionPane.showMessageDialog(
                             this,
-                            "Failed to delete employee: " + response.body(),
+                            "Failed to delete user: " + response.body(),
                             "Error",
                             JOptionPane.ERROR_MESSAGE
                     );
@@ -228,21 +225,22 @@ public class EmployeesPanel extends JPanel {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(
                         this,
-                        "Error deleting employee: " + e.getMessage(),
+                        "Error deleting user: " + e.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                 );
             }
         }
     }
-    private void showEmployeeDetailsDialog() {
-        int selectedRow = employeesTable.getSelectedRow();
+
+    private void showUserDetailsDialog() {
+        int selectedRow = usersTable.getSelectedRow();
         if (selectedRow == -1) {
             return;
         }
 
-        // Get the employee ID from the selected row
-        Long employeeId = (Long) tableModel.getValueAt(selectedRow, 0);
+        // Get the user ID from the selected row
+        Long userId = (Long) tableModel.getValueAt(selectedRow, 0);
 
         try {
             // Get base64-encoded credentials
@@ -251,9 +249,9 @@ public class EmployeesPanel extends JPanel {
                     credentials.getBytes(StandardCharsets.UTF_8)
             );
 
-            // Create request to fetch employee details
+            // Create request to fetch user details
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE_URL + "/" + employeeId))
+                    .uri(URI.create(API_BASE_URL + "/" + userId))
                     .header("Authorization", "Basic " + encodedCredentials)
                     .header("Content-Type", "application/json")
                     .GET()
@@ -262,21 +260,21 @@ public class EmployeesPanel extends JPanel {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                // Parse employee details
-                Employee employee = objectMapper.readValue(response.body(), Employee.class);
+                // Parse user details
+                User user = objectMapper.readValue(response.body(), User.class);
 
                 // Create and show details dialog
-                EmployeeDetailsDialog dialog = new EmployeeDetailsDialog(
+                UserDetailsDialog dialog = new UserDetailsDialog(
                         (Frame) SwingUtilities.getWindowAncestor(this),
-                        employee,
-                        true
-                        , currentUser
+                        user,
+                        true,
+                        currentUser
                 );
                 dialog.setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(
                         this,
-                        "Failed to fetch employee details: " + response.body(),
+                        "Failed to fetch user details: " + response.body(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                 );
@@ -285,7 +283,7 @@ public class EmployeesPanel extends JPanel {
             e.printStackTrace();
             JOptionPane.showMessageDialog(
                     this,
-                    "Error fetching employee details: " + e.getMessage(),
+                    "Error fetching user details: " + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
             );

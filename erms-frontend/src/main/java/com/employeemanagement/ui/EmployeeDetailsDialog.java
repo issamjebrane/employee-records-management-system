@@ -10,17 +10,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EmployeeDetailsDialog extends JDialog {
-    private static final String API_BASE_URL = "http://localhost:8080/api/employees";
+    private static final String API_BASE_URL = "http://localhost:8080/api/v1/employees";
     private final Employee employee;
     private final boolean isEditable;
     private final User currentUser;
-    // Text fields for potential editing
     private JTextField firstNameField;
     private JTextField lastNameField;
     private JTextField emailField;

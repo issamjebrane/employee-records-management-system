@@ -12,4 +12,6 @@ import java.util.List;
 public interface AuditRepository extends JpaRepository<AuditTrail, Long> {
     List<AuditTrail> findByTableNameAndRecordId(String tableName, Long recordId);
     List<AuditTrail> findByChangedBy_UserId(Long userId);
+
+    List<AuditTrail> findByTableName(String tableName);
 }

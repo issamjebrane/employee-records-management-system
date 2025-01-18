@@ -1,0 +1,363 @@
+{
+	"info": {
+	  "_postman_id": "your-collection-id",
+	  "name": "Employee Management System API",
+	  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+	  {
+		"name": "Users",
+		"item": [
+		  {
+			"name": "Login",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/users/login",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "users", "login"]
+			  }
+			}
+		  },
+		  {
+			"name": "Get All Users",
+			"request": {
+			  "method": "GET",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/users",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "users"]
+			  }
+			}
+		  },
+		  {
+			"name": "Create User",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				},
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"username\": \"newuser\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"HR\",\n    \"departmentId\": 1\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/users",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "users"]
+			  }
+			}
+		  },
+		  {
+			"name": "Update User",
+			"request": {
+			  "method": "PUT",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				},
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"email\": \"updated@example.com\",\n    \"role\": \"MANAGER\",\n    \"departmentId\": 2\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/users/1",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "users", "1"]
+			  }
+			}
+		  },
+		  {
+			"name": "Delete User",
+			"request": {
+			  "method": "DELETE",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/users/1",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "users", "1"]
+			  }
+			}
+		  }
+		]
+	  },
+	  {
+		"name": "Departments",
+		"item": [
+		  {
+			"name": "Get All Departments",
+			"request": {
+			  "method": "GET",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/departments",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "departments"]
+			  }
+			}
+		  },
+		  {
+			"name": "Get Department by ID",
+			"request": {
+			  "method": "GET",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/departments/1",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "departments", "1"]
+			  }
+			}
+		  },
+		  {
+			"name": "Create Department",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				},
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"deptName\": \"Marketing\"\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/departments",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "departments"]
+			  }
+			}
+		  },
+		  {
+			"name": "Update Department",
+			"request": {
+			  "method": "PUT",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				},
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"deptName\": \"Digital Marketing\"\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/departments/1",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "departments", "1"]
+			  }
+			}
+		  },
+		  {
+			"name": "Delete Department",
+			"request": {
+			  "method": "DELETE",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/departments/1",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "departments", "1"]
+			  }
+			}
+		  }
+		]
+	  },
+	  {
+		"name": "Employees",
+		"item": [
+		  {
+			"name": "Get All Employees",
+			"request": {
+			  "method": "GET",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/employees",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "employees"],
+				"query": [
+				  {
+					"key": "page",
+					"value": "0"
+				  },
+				  {
+					"key": "size",
+					"value": "10"
+				  }
+				]
+			  }
+			}
+		  },
+		  {
+			"name": "Create Employee",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json"
+				},
+				{
+				  "key": "Authorization",
+				  "value": "Basic {{base64_credentials}}"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"hireDate\": \"2025-01-17\",\n    \"jobTitle\": \"Software Engineer\",\n    \"departmentId\": 1,\n    \"salary\": 75000.00,\n    \"status\": \"ACTIVE\"\n}"
+			  },
+			  "url": {
+				"raw": "{{baseUrl}}/api/v1/employees",
+				"host": ["{{baseUrl}}"],
+				"path": ["api", "v1", "employees"]
+			  }
+			}
+		  }
+		]
+	  }
+	],
+	"event": [
+	  {
+		"listen": "prerequest",
+		"script": {
+		  "type": "text/javascript",
+		  "exec": [""]
+		}
+	  },
+	  {
+		"listen": "test",
+		"script": {
+		  "type": "text/javascript",
+		  "exec": [""]
+		}
+	  }
+	],
+	"variable": [
+	  {
+		"key": "baseUrl",
+		"value": "http://localhost:8080",
+		"type": "string"
+	  },
+	  {
+		"key": "base64_credentials",
+		"value": "YWRtaW46YWRtaW4xMjM=",
+		"type": "string"
+	  }
+	],
+	"environments": [
+        {
+            "name": "Admin Environment",
+            "values": [
+                {
+                    "key": "baseUrl",
+                    "value": "http://localhost:8080",
+                    "type": "default",
+                    "enabled": true
+                },
+                {
+                    "key": "base64_credentials",
+                    "value": "YWRtaW46YWRtaW4xMjM=",
+                    "type": "default",
+                    "enabled": true
+                }
+            ]
+        },
+        {
+            "name": "HR Environment",
+            "values": [
+                {
+                    "key": "baseUrl",
+                    "value": "http://localhost:8080",
+                    "type": "default",
+                    "enabled": true
+                },
+                {
+                    "key": "base64_credentials",
+                    "value": "aHI6aHIxMjM=",
+                    "type": "default",
+                    "enabled": true
+                }
+            ]
+        },
+        {
+            "name": "Manager Environment",
+            "values": [
+                {
+                    "key": "baseUrl",
+                    "value": "http://localhost:8080",
+                    "type": "default",
+                    "enabled": true
+                },
+                {
+                    "key": "base64_credentials",
+                    "value": "bWFuYWdlcjptYW5hZ2VyMTIz",
+                    "type": "default",
+                    "enabled": true
+                }
+            ]
+        }
+	]
+  }
